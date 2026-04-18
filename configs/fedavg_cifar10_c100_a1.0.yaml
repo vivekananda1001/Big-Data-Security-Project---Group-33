@@ -1,0 +1,13 @@
+experiment_name: fedavg_cifar10_c100_a1.0
+method: fedavg
+dataset: cifar10
+num_clients: 100
+alpha: 1.0
+num_rounds: 300
+seed: 42
+fraction_fit: 0.5
+fraction_evaluate: 0.0
+local_epochs: 5
+batch_size: 32
+lr: 0.01
+momentum: 0.9

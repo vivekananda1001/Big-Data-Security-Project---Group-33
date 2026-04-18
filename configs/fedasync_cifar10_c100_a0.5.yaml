@@ -1,0 +1,19 @@
+experiment_name: fedasync_cifar10_c100_a0.5
+method: fedasync
+dataset: cifar10
+num_clients: 100
+alpha: 0.5
+num_rounds: 300
+seed: 42
+fraction_fit: 0.5
+fraction_evaluate: 0.0
+local_epochs: 5
+batch_size: 32
+lr: 0.01
+momentum: 0.9
+fedasync:
+  staleness_decay_a: 0.5
+  deadline_percentile: 0.6
+straggler:
+  straggler_fraction: 0.3
+  slow_factor: 5.0
