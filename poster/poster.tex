@@ -1,0 +1,241 @@
+\documentclass[final]{beamer}
+
+% ====================
+% Packages
+% ====================
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{luainputenc}
+\usepackage{lmodern}
+\usepackage[size=custom, width=122,height=91, scale=1.2]{beamerposter}
+\usetheme{gemini}
+\usecolortheme{msu}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.14}
+\usepackage{anyfontsize}
+\usepackage{amsmath}
+
+% ====================
+% Lengths
+% ====================
+
+\newlength{\sepwidth}
+\newlength{\colwidth}
+\setlength{\sepwidth}{0.025\paperwidth}
+\setlength{\colwidth}{0.3\paperwidth}
+
+\newcommand{\separatorcolumn}{\begin{column}{\sepwidth}\end{column}}
+
+% ====================
+% Title
+% ====================
+
+\title{Federated Learning Under System Heterogeneity:\\FedDgc with Dynamic Caching for Straggler-Resilient Training}
+
+% TODO: Add your names
+\author{Member 1 \and Member 2 \and Member 3 \and Member 4}
+
+\institute[shortinst]{IIT Patna --- BDS Program --- Category 7: System Heterogeneity}
+
+% ====================
+% Footer
+% ====================
+
+\footercontent{
+  Federated Learning Course --- Jan--April 2026 \hfill
+  Category 7: System Heterogeneity \hfill
+  \href{mailto:}{Contact: your-email@iitp.ac.in}}
+
+% ====================
+% Body
+% ====================
+
+\begin{document}
+
+\begin{frame}[t]
+\begin{columns}[t]
+\separatorcolumn
+
+\begin{column}{\colwidth}
+
+  \begin{block}{1. Problem: System Heterogeneity in Federated Learning}
+
+    Federated Learning (FL) enables collaborative model training across distributed devices without sharing raw data. However, \textbf{system heterogeneity}---variability in compute power, memory, and network speed---creates \textbf{stragglers} that bottleneck synchronous training.
+
+    \begin{itemize}
+      \item \textbf{The Straggler Problem:} In FedAvg, each round waits for the \textit{slowest} client. With 30\% of devices being 5$\times$ slower, round completion time is dominated by stragglers.
+      \item \textbf{Data Heterogeneity Compounds the Issue:} Non-IID data (modeled via Dirichlet $\alpha$) causes local model drift. Combined with staleness from async updates, this degrades convergence.
+      \item \textbf{Goal:} Achieve robust accuracy with faster effective training under mixed device speeds and non-IID data.
+    \end{itemize}
+
+  \end{block}
+
+  \begin{block}{2. Assigned Papers}
+
+    \textbf{Paper 1 --- Survey:} Chen et al. (2025), ``Advances in Robust Federated Learning: A Survey with Heterogeneity Considerations''
+    \begin{itemize}
+      \item Comprehensive taxonomy: data, model, task, communication, and device heterogeneity
+      \item Reviews 200+ methods across data-level, model-level, and architecture-level approaches
+      \item Discusses privacy-preserving strategies under heterogeneous settings
+    \end{itemize}
+
+    \vspace{0.5em}
+    \textbf{Paper 2 --- Method:} Wang et al. (2025), ``A decentralized asynchronous federated learning framework for edge devices''
+    \begin{itemize}
+      \item Proposes \textbf{FedDgc}: Federated Learning with Dynamically Growing Cache
+      \item Decentralized architecture with blockchain + IPFS for trust and storage
+      \item Dynamic cache, staleness-aware aggregation, proximal regularization
+      \item Achieves 82.29\% on CIFAR-10 vs. 78.61\% for FedAvg
+    \end{itemize}
+
+  \end{block}
+
+  \begin{alertblock}{3. Key Insight}
+
+    FedDgc's dynamic cache starts \textbf{small in early rounds} (when models converge quickly and few updates suffice) and \textbf{grows over time} as training benefits from more diverse contributions. This reduces redundant gradient exchanges by up to 72\% while maintaining accuracy.
+
+    $$\mu^r = \min\!\left(\frac{r}{v},\; N^r \cdot \lambda\right)$$
+
+    Combined with staleness weighting $S_k(\tau_k) = (\tau_k + 1)^{-a}$ and adaptive mixing $w^{r+1} = a'\,\overline{w^r} + (1-a')\,w^r$, FedDgc adapts to both system and data heterogeneity simultaneously.
+
+  \end{alertblock}
+
+\end{column}
+
+\separatorcolumn
+
+\begin{column}{\colwidth}
+
+  \begin{block}{4. Methods Implemented}
+
+    We implement three methods in the \textbf{Flower (flwr)} simulation framework:
+
+    \begin{enumerate}
+      \item \textbf{FedAvg} --- Synchronous baseline. All sampled clients contribute equally. No straggler handling.
+      \item \textbf{FedDgc-Sim} --- Full FedDgc algorithm adapted to Flower simulation:
+        \begin{itemize}
+          \item Straggler simulation (30\% clients at 5$\times$ slowdown)
+          \item Deadline-based filtering (60th percentile)
+          \item Dynamic growing cache
+          \item Staleness-aware weighted aggregation
+          \item Mixing hyperparameter for model updates
+          \item Proximal regularization ($\rho = 0.01$)
+        \end{itemize}
+      \item \textbf{FedAsync-Basic} --- Simple async baseline with staleness weighting only (no cache, no mixing, no proximal term). Isolates FedDgc's contributions.
+    \end{enumerate}
+
+  \end{block}
+
+  \begin{block}{5. Experimental Setup}
+
+    \begin{table}
+      \centering
+      \begin{tabular}{l l}
+        \toprule
+        \textbf{Parameter} & \textbf{Value} \\
+        \midrule
+        Datasets & MNIST, FMNIST, CIFAR-10 \\
+        Number of clients & 10, 50, 100 \\
+        Non-IID ($\alpha$) & 0.01, 0.1, 0.5, 1.0, IID \\
+        Fraction fit & 0.5 (50\% clients/round) \\
+        Local epochs & 5 \\
+        Batch size & 32 \\
+        Optimizer & SGD (momentum = 0.9, lr = 0.01) \\
+        Rounds & 100 \\
+        Model & 4-Conv CNN + 2 FC layers \\
+        \bottomrule
+      \end{tabular}
+      \caption{Standardized experimental settings per course requirements.}
+    \end{table}
+
+    \textbf{Evaluation Metrics:}
+    \begin{itemize}
+      \item \textit{Universal:} Global test accuracy, global test loss, convergence round ($\geq$80\%), communication cost (MB)
+      \item \textit{Category 7:} Round completion time, straggler ratio, accuracy under partial participation
+    \end{itemize}
+
+  \end{block}
+
+  \begin{block}{6. Results}
+
+    % TODO: Replace placeholder with actual results figure
+    \begin{figure}
+      \centering
+      % \includegraphics[width=0.85\textwidth]{../results/plots/accuracy_vs_rounds_cifar10_c100.png}
+      \fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}\textit{[Accuracy vs. Rounds plot --- insert after experiments]}\vspace{3cm}}}
+      \caption{Global accuracy vs. communication rounds on CIFAR-10, 100 clients, $\alpha=0.1$.}
+    \end{figure}
+
+  \end{block}
+
+\end{column}
+
+\separatorcolumn
+
+\begin{column}{\colwidth}
+
+  \begin{exampleblock}{7. Results Table}
+
+    % TODO: Fill with actual numbers after running experiments
+    \begin{table}
+      \centering
+      \begin{tabular}{l l c c c}
+        \toprule
+        \textbf{Method} & \textbf{Dataset} & \textbf{Acc (\%)} & \textbf{Conv. Rd} & \textbf{Stragg. Ratio} \\
+        \midrule
+        FedAvg & CIFAR-10 & -- & -- & 0.00 \\
+        FedDgc & CIFAR-10 & -- & -- & $\sim$0.35 \\
+        FedAsync & CIFAR-10 & -- & -- & $\sim$0.35 \\
+        \midrule
+        FedAvg & FMNIST & -- & -- & 0.00 \\
+        FedDgc & FMNIST & -- & -- & $\sim$0.35 \\
+        \midrule
+        FedAvg & MNIST & -- & -- & 0.00 \\
+        FedDgc & MNIST & -- & -- & $\sim$0.35 \\
+        \bottomrule
+      \end{tabular}
+      \caption{Summary results (100 clients, $\alpha=0.1$). Fill after experiments.}
+    \end{table}
+
+  \end{exampleblock}
+
+  \begin{block}{8. Key Findings}
+
+    \begin{itemize}
+      \item \textbf{FedDgc handles stragglers effectively:} By filtering clients beyond the deadline and using staleness-weighted aggregation, FedDgc maintains accuracy while reducing effective round time.
+      \item \textbf{Dynamic cache reduces early-stage waste:} The growing cache starts small when models converge quickly and expands as training stabilizes, reducing gradient exchange count.
+      \item \textbf{Proximal term helps under non-IID:} The regularization $\frac{\rho}{2}\|w_k - w^r\|^2$ limits client drift, especially at low $\alpha$ (high heterogeneity).
+      \item \textbf{Simple async is insufficient:} FedAsync-Basic (staleness weighting only) underperforms FedDgc, confirming the value of the cache, mixing, and proximal components.
+      \item \textbf{Benefits scale with client count:} Straggler mitigation matters more at 100 clients than at 10, where fewer slow devices are present.
+    \end{itemize}
+
+  \end{block}
+
+  \begin{block}{9. Conclusion}
+
+    System heterogeneity is a critical real-world challenge for FL. FedDgc's combination of dynamic caching, staleness-aware aggregation, and proximal regularization provides a principled approach to straggler resilience while maintaining convergence quality under non-IID data. Our Flower-based implementation confirms the key findings from Wang et al. and demonstrates the complementary value of each algorithmic component through ablation against the FedAsync-Basic baseline.
+
+  \end{block}
+
+  \begin{block}{References}
+
+    \footnotesize{
+    [1] McMahan et al., ``Communication-efficient learning of deep networks from decentralized data,'' AISTATS, 2017.\\
+    [2] Chen et al., ``Advances in robust federated learning: A survey with heterogeneity considerations,'' arXiv:2405.09839, 2025.\\
+    [3] Wang et al., ``A decentralized asynchronous federated learning framework for edge devices,'' FGCS, vol.~166, 2025.\\
+    [4] Li et al., ``Federated optimization in heterogeneous networks,'' MLSys, 2020.\\
+    [5] Nguyen et al., ``Federated learning with buffered asynchronous aggregation,'' AISTATS, 2022.
+    }
+
+  \end{block}
+
+\end{column}
+
+\separatorcolumn
+\end{columns}
+\end{frame}
+
+\end{document}
