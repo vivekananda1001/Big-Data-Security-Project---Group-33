@@ -26,8 +26,6 @@ def set_seeds(seed: int = 42):
 
 METRIC_FIELDS = [
     "round", "global_accuracy", "global_loss",
-    "num_aggregated", "cache_size", "avg_staleness",
-    "straggler_ratio", "round_completion_time", "mixing_a_prime",
     "comm_cost_mb",
 ]
 
@@ -99,34 +97,6 @@ def plot_loss_vs_rounds(csv_paths: dict, output_path: str, title: str = "Global 
     plt.close()
 
 
-def plot_cat7_metrics(csv_paths: dict, output_path: str):
-    """Plot round completion time and straggler ratio vs rounds (two subplots)."""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-
-    for label, path in csv_paths.items():
-        df = _load_metrics(path)
-        if "round_completion_time" in df.columns:
-            ax1.plot(df["round"], df["round_completion_time"], label=label, linewidth=1.5)
-        if "straggler_ratio" in df.columns:
-            ax2.plot(df["round"], df["straggler_ratio"], label=label, linewidth=1.5)
-
-    ax1.set_xlabel("Communication Round")
-    ax1.set_ylabel("Round Completion Time (simulated)")
-    ax1.set_title("Round Completion Time vs. Rounds")
-    ax1.legend(fontsize=10)
-    ax1.grid(True, alpha=0.3)
-
-    ax2.set_xlabel("Communication Round")
-    ax2.set_ylabel("Straggler Ratio")
-    ax2.set_title("Straggler Ratio vs. Rounds")
-    ax2.legend(fontsize=10)
-    ax2.grid(True, alpha=0.3)
-
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=300, bbox_inches="tight")
-    plt.close()
-
-
 def plot_iid_vs_noniid(iid_csv: str, noniid_csv: str, output_path: str,
                         iid_label: str = "IID", noniid_label: str = "Non-IID (α=0.1)"):
     plt.figure(figsize=(8, 5))
@@ -144,8 +114,8 @@ def plot_iid_vs_noniid(iid_csv: str, noniid_csv: str, output_path: str,
     plt.close()
 
 
-def plot_fedavg_vs_proposed(csv_paths: dict, output_path: str, metric: str = "global_accuracy"):
-    """Bar chart comparing final accuracy across methods."""
+def plot_accuracy_comparison(csv_paths: dict, output_path: str, metric: str = "global_accuracy"):
+    """Bar chart comparing final accuracy across experiments."""
     import pandas as pd
 
     labels = []
@@ -164,8 +134,9 @@ def plot_fedavg_vs_proposed(csv_paths: dict, output_path: str, metric: str = "gl
                 f"{val:.4f}", ha="center", va="bottom", fontsize=10)
 
     ax.set_ylabel("Final " + metric.replace("_", " ").title())
-    ax.set_title("FedAvg vs. Proposed Method Comparison")
+    ax.set_title("FedAvg Accuracy Across Heterogeneity Settings")
     ax.grid(True, alpha=0.3, axis="y")
+    plt.xticks(rotation=30, ha="right")
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.close()
@@ -178,14 +149,10 @@ def generate_results_table(csv_paths: dict, output_path: str):
     rows = []
     for label, path in csv_paths.items():
         df = pd.read_csv(path)
-        parts = label.split("_")
         conv_round = find_convergence_round(path)
         final_acc = df["global_accuracy"].iloc[-1] if not df.empty else 0
         final_loss = df["global_loss"].iloc[-1] if not df.empty else 0
         total_rounds = int(df["round"].iloc[-1]) if not df.empty else 0
-
-        avg_straggler = df["straggler_ratio"].mean() if "straggler_ratio" in df.columns else 0
-        avg_round_time = df["round_completion_time"].mean() if "round_completion_time" in df.columns else 0
 
         rows.append({
             "Experiment": label,
@@ -193,8 +160,6 @@ def generate_results_table(csv_paths: dict, output_path: str):
             "Final Loss": round(final_loss, 4),
             "Convergence Round": conv_round,
             "Total Rounds": total_rounds,
-            "Avg Straggler Ratio": round(avg_straggler, 4),
-            "Avg Round Time": round(avg_round_time, 4),
         })
 
     result_df = pd.DataFrame(rows)

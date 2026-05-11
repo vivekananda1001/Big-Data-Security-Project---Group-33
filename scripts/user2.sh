@@ -1,23 +1,16 @@
 #!/bin/bash
-# USER 2: FedDgc — CIFAR-10 (all client scales + all alphas)
-# Estimated: 12 experiments
+# USER 2: FedAvg — CIFAR-10 (c100, all alphas)
+# Estimated: 5 experiments
 
 cd "$(dirname "$0")/.."
 source venv/bin/activate
 
 configs=(
-    configs/feddgc_cifar10_c10_aiid.yaml
-    configs/feddgc_cifar10_c10_a0.1.yaml
-    configs/feddgc_cifar10_c10_a0.5.yaml
-    configs/feddgc_cifar10_c50_aiid.yaml
-    configs/feddgc_cifar10_c50_a0.1.yaml
-    configs/feddgc_cifar10_c50_a0.5.yaml
-    configs/feddgc_cifar10_c100_aiid.yaml
-    configs/feddgc_cifar10_c100_a0.01.yaml
-    configs/feddgc_cifar10_c100_a0.1.yaml
-    configs/feddgc_cifar10_c100_a0.5.yaml
-    configs/feddgc_cifar10_c100_a1.0.yaml
-    configs/feddgc_mnist_c100_aiid.yaml
+    configs/fedavg_cifar10_c100_aiid.yaml
+    configs/fedavg_cifar10_c100_a0.01.yaml
+    configs/fedavg_cifar10_c100_a0.1.yaml
+    configs/fedavg_cifar10_c100_a0.5.yaml
+    configs/fedavg_cifar10_c100_a1.0.yaml
 )
 
 total=${#configs[@]}

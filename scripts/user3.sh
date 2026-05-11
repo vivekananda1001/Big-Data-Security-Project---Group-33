@@ -1,6 +1,6 @@
 #!/bin/bash
-# USER 3: FedAvg + FedDgc — FMNIST (all client scales + all alphas)
-# Estimated: 12 experiments
+# USER 3: FedAvg — FMNIST (c10 + c50 + c100)
+# Estimated: 9 experiments
 
 cd "$(dirname "$0")/.."
 source venv/bin/activate
@@ -15,9 +15,6 @@ configs=(
     configs/fedavg_fmnist_c100_aiid.yaml
     configs/fedavg_fmnist_c100_a0.1.yaml
     configs/fedavg_fmnist_c100_a0.5.yaml
-    configs/feddgc_fmnist_c10_aiid.yaml
-    configs/feddgc_fmnist_c10_a0.1.yaml
-    configs/feddgc_fmnist_c10_a0.5.yaml
 )
 
 total=${#configs[@]}

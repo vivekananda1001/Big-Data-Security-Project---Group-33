@@ -1,22 +1,16 @@
 """Flower server setup: strategy selection, global evaluation, metrics logging."""
 
 from collections import OrderedDict
-from typing import Optional
 
 import torch
-import numpy as np
-from flwr.common import NDArrays, Scalar, ndarrays_to_parameters, parameters_to_ndarrays
+from flwr.common import NDArrays, Scalar, ndarrays_to_parameters
 from flwr.server.strategy import FedAvg
 
-from src.model import get_model, get_model_size_mb
-from src.data import load_global_testset
-from src.strategy.fed_dgc import FedDgcStrategy
-from src.strategy.fed_async_basic import FedAsyncBasicStrategy
-from src.strategy.straggler_sim import StragglerSimulator
+from src.model import get_model
 from src.utils import MetricsLogger
 
 
-def get_evaluate_fn(model, testloader, device, logger: MetricsLogger, model_size_mb: float):
+def get_evaluate_fn(model, testloader, device, logger: MetricsLogger):
     """Returns a server-side evaluation function."""
 
     def evaluate(server_round: int, parameters: NDArrays, config: dict[str, Scalar]):
@@ -58,7 +52,7 @@ def get_evaluate_fn(model, testloader, device, logger: MetricsLogger, model_size
     return evaluate
 
 
-def build_strategy(config: dict, straggler_sim: Optional[StragglerSimulator] = None):
+def build_strategy(config: dict):
     """Build the FL strategy based on config."""
     method = config["method"]
     fraction_fit = config.get("fraction_fit", 0.5)
@@ -71,50 +65,14 @@ def build_strategy(config: dict, straggler_sim: Optional[StragglerSimulator] = N
         [val.cpu().numpy() for val in model.state_dict().values()]
     )
 
-    common_kwargs = dict(
-        fraction_fit=fraction_fit,
-        fraction_evaluate=fraction_evaluate,
-        min_fit_clients=min_fit_clients,
-        min_available_clients=min_available_clients,
-        initial_parameters=initial_params,
-    )
-
     if method == "fedavg":
-        strategy = FedAvg(**common_kwargs)
-
-    elif method == "feddgc":
-        dgc_cfg = config.get("feddgc", {})
-        if straggler_sim is None:
-            straggler_sim = StragglerSimulator(
-                num_clients=config["num_clients"],
-                **config.get("straggler", {}),
-            )
-        strategy = FedDgcStrategy(
-            straggler_simulator=straggler_sim,
-            cache_growth_rate_v=dgc_cfg.get("cache_growth_rate_v", 50.0),
-            cache_lambda=dgc_cfg.get("cache_lambda", 0.5),
-            staleness_decay_a=dgc_cfg.get("staleness_decay_a", 0.5),
-            mixing_alpha=dgc_cfg.get("mixing_alpha", 0.5),
-            proximal_mu=dgc_cfg.get("proximal_mu", 0.01),
-            max_staleness=dgc_cfg.get("max_staleness", 10),
-            deadline_percentile=dgc_cfg.get("deadline_percentile", 0.6),
-            **common_kwargs,
+        strategy = FedAvg(
+            fraction_fit=fraction_fit,
+            fraction_evaluate=fraction_evaluate,
+            min_fit_clients=min_fit_clients,
+            min_available_clients=min_available_clients,
+            initial_parameters=initial_params,
         )
-
-    elif method == "fedasync":
-        if straggler_sim is None:
-            straggler_sim = StragglerSimulator(
-                num_clients=config["num_clients"],
-                **config.get("straggler", {}),
-            )
-        async_cfg = config.get("fedasync", {})
-        strategy = FedAsyncBasicStrategy(
-            straggler_simulator=straggler_sim,
-            staleness_decay_a=async_cfg.get("staleness_decay_a", 0.5),
-            deadline_percentile=async_cfg.get("deadline_percentile", 0.6),
-            **common_kwargs,
-        )
-
     else:
         raise ValueError(f"Unknown method: {method}")
 

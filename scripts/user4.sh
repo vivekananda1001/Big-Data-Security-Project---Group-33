@@ -1,23 +1,13 @@
 #!/bin/bash
-# USER 4: FedDgc FMNIST (remaining) + FedAsync + MNIST
-# Estimated: 12 experiments
+# USER 4: FedAvg — MNIST
+# Estimated: 2 experiments
 
 cd "$(dirname "$0")/.."
 source venv/bin/activate
 
 configs=(
-    configs/feddgc_fmnist_c50_aiid.yaml
-    configs/feddgc_fmnist_c50_a0.1.yaml
-    configs/feddgc_fmnist_c50_a0.5.yaml
-    configs/feddgc_fmnist_c100_aiid.yaml
-    configs/feddgc_fmnist_c100_a0.1.yaml
-    configs/feddgc_fmnist_c100_a0.5.yaml
-    configs/fedasync_cifar10_c100_a0.1.yaml
-    configs/fedasync_cifar10_c100_a0.5.yaml
-    configs/fedasync_fmnist_c100_a0.1.yaml
-    configs/fedasync_fmnist_c100_a0.5.yaml
+    configs/fedavg_mnist_c100_aiid.yaml
     configs/fedavg_mnist_c100_a0.1.yaml
-    configs/feddgc_mnist_c100_a0.1.yaml
 )
 
 total=${#configs[@]}

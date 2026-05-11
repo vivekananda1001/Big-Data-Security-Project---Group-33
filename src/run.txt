@@ -1,0 +1,3 @@
+ssh-keygen -t ed25519 -C "aakash04unique@gmail.com" -f ~/.ssh/id_ed25519_uniquegit
+
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMnMFq6hZ6tXFXm+r4HIJ7fw/fD6swTrxbl61IJD9Lsl

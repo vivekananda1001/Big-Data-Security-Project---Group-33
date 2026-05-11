@@ -1,16 +1,14 @@
-"""Flower client with optional proximal term and straggler time simulation."""
+"""Flower client for federated learning experiments."""
 
 from collections import OrderedDict
 
 import torch
 import torch.nn as nn
-import numpy as np
 import flwr as fl
 from flwr.common import NDArrays, Scalar
 
 from src.model import get_model
 from src.data import load_partition
-from src.strategy.straggler_sim import StragglerSimulator
 
 
 class FLClient(fl.client.NumPyClient):
@@ -25,21 +23,13 @@ class FLClient(fl.client.NumPyClient):
         local_epochs: int = 5,
         lr: float = 0.01,
         momentum: float = 0.9,
-        proximal_mu: float = 0.0,
-        straggler_sim: StragglerSimulator | None = None,
         device: str = "cpu",
     ):
         self.cid = cid
-        self.dataset_name = dataset_name
-        self.num_clients = num_clients
-        self.alpha = alpha
-        self.batch_size = batch_size
+        self.device = device
         self.local_epochs = local_epochs
         self.lr = lr
         self.momentum = momentum
-        self.proximal_mu = proximal_mu
-        self.straggler_sim = straggler_sim
-        self.device = device
 
         self.model = get_model(dataset_name).to(self.device)
         self.trainloader, self.testloader = load_partition(
@@ -65,13 +55,6 @@ class FLClient(fl.client.NumPyClient):
     ) -> tuple[NDArrays, int, dict[str, Scalar]]:
         self.set_parameters(parameters)
 
-        if self.proximal_mu > 0:
-            global_params = {
-                k: v.clone().detach()
-                for k, v in self.model.state_dict().items()
-                if v.is_floating_point()
-            }
-
         optimizer = torch.optim.SGD(
             self.model.parameters(), lr=self.lr, momentum=self.momentum
         )
@@ -89,14 +72,6 @@ class FLClient(fl.client.NumPyClient):
                 optimizer.zero_grad()
                 output = self.model(images)
                 loss = criterion(output, labels)
-
-                if self.proximal_mu > 0:
-                    prox_loss = 0.0
-                    for name, param in self.model.named_parameters():
-                        if name in global_params:
-                            prox_loss += ((param - global_params[name]) ** 2).sum()
-                    loss = loss + (self.proximal_mu / 2.0) * prox_loss
-
                 loss.backward()
                 optimizer.step()
 
@@ -104,12 +79,10 @@ class FLClient(fl.client.NumPyClient):
                 total_samples += len(labels)
 
         avg_loss = total_loss / max(total_samples, 1)
-        sim_time = self.straggler_sim.get_simulated_time(self.cid) if self.straggler_sim else 1.0
         num_examples = len(self.trainloader.dataset)
 
         metrics = {
             "train_loss": float(avg_loss),
-            "simulated_time": float(sim_time),
             "num_examples": float(num_examples),
             "cid": float(self.cid),
         }
@@ -153,8 +126,6 @@ def gen_client_fn(
     local_epochs: int = 5,
     lr: float = 0.01,
     momentum: float = 0.9,
-    proximal_mu: float = 0.0,
-    straggler_sim: StragglerSimulator | None = None,
     device: str = "cpu",
 ):
     """Returns a function that creates a client for a given cid."""
@@ -168,8 +139,6 @@ def gen_client_fn(
             local_epochs=local_epochs,
             lr=lr,
             momentum=momentum,
-            proximal_mu=proximal_mu,
-            straggler_sim=straggler_sim,
             device=device,
         )
     return client_fn

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate all mandatory plots and summary table from experiment CSVs."""
+"""Generate all plots and summary table from FedAvg experiment CSVs."""
 
 import os
 import sys
@@ -9,8 +9,7 @@ from src.utils import (
     plot_accuracy_vs_rounds,
     plot_loss_vs_rounds,
     plot_iid_vs_noniid,
-    plot_fedavg_vs_proposed,
-    plot_cat7_metrics,
+    plot_accuracy_comparison,
     generate_results_table,
 )
 
@@ -31,71 +30,76 @@ def available(names_dict):
     return {k: v for k, v in names_dict.items() if os.path.exists(v)}
 
 
-# ── Plot 1: Accuracy vs rounds — all methods, CIFAR-10 c100 a0.1 ──
+# ── Plot 1: Accuracy vs rounds — varying alpha, CIFAR-10 c100 ──
 p1 = {
-    "FedAvg": csv("fedavg_cifar10_c100_a0.1"),
-    "FedDgc": csv("feddgc_cifar10_c100_a0.1"),
-    "FedAsync": csv("fedasync_cifar10_c100_a0.1"),
+    "α=0.01": csv("fedavg_cifar10_c100_a0.01"),
+    "α=0.1": csv("fedavg_cifar10_c100_a0.1"),
+    "α=0.5": csv("fedavg_cifar10_c100_a0.5"),
+    "α=1.0": csv("fedavg_cifar10_c100_a1.0"),
+    "IID": csv("fedavg_cifar10_c100_aiid"),
 }
 p1 = available(p1)
 if p1:
-    plot_accuracy_vs_rounds(p1, f"{PLOTS_DIR}/accuracy_vs_rounds_cifar10_c100_a0.1.png",
-                            "Global Accuracy vs. Rounds — CIFAR-10, 100 clients, α=0.1")
-    print("[OK] Plot 1: accuracy_vs_rounds_cifar10_c100_a0.1.png")
+    plot_accuracy_vs_rounds(p1, f"{PLOTS_DIR}/accuracy_vs_alpha_cifar10_c100.png",
+                            "FedAvg Accuracy vs. Rounds — CIFAR-10, 100 clients, varying α")
+    print("[OK] Plot 1: accuracy_vs_alpha_cifar10_c100.png")
 
 # ── Plot 2: Loss vs rounds — same config ──
 if p1:
-    plot_loss_vs_rounds(p1, f"{PLOTS_DIR}/loss_vs_rounds_cifar10_c100_a0.1.png",
-                        "Global Loss vs. Rounds — CIFAR-10, 100 clients, α=0.1")
-    print("[OK] Plot 2: loss_vs_rounds_cifar10_c100_a0.1.png")
+    plot_loss_vs_rounds(p1, f"{PLOTS_DIR}/loss_vs_alpha_cifar10_c100.png",
+                        "FedAvg Loss vs. Rounds — CIFAR-10, 100 clients, varying α")
+    print("[OK] Plot 2: loss_vs_alpha_cifar10_c100.png")
 
-# ── Plot 3: IID vs Non-IID — FedAvg ──
+# ── Plot 3: IID vs Non-IID — CIFAR-10 ──
 if exists("fedavg_cifar10_c100_aiid") and exists("fedavg_cifar10_c100_a0.1"):
     plot_iid_vs_noniid(csv("fedavg_cifar10_c100_aiid"), csv("fedavg_cifar10_c100_a0.1"),
-                       f"{PLOTS_DIR}/iid_vs_noniid_fedavg.png",
-                       "FedAvg IID", "FedAvg Non-IID (α=0.1)")
-    print("[OK] Plot 3a: iid_vs_noniid_fedavg.png")
+                       f"{PLOTS_DIR}/iid_vs_noniid_cifar10.png",
+                       "IID", "Non-IID (α=0.1)")
+    print("[OK] Plot 3a: iid_vs_noniid_cifar10.png")
 
-if exists("feddgc_cifar10_c100_aiid") and exists("feddgc_cifar10_c100_a0.1"):
-    plot_iid_vs_noniid(csv("feddgc_cifar10_c100_aiid"), csv("feddgc_cifar10_c100_a0.1"),
-                       f"{PLOTS_DIR}/iid_vs_noniid_feddgc.png",
-                       "FedDgc IID", "FedDgc Non-IID (α=0.1)")
-    print("[OK] Plot 3b: iid_vs_noniid_feddgc.png")
+if exists("fedavg_fmnist_c100_aiid") and exists("fedavg_fmnist_c100_a0.1"):
+    plot_iid_vs_noniid(csv("fedavg_fmnist_c100_aiid"), csv("fedavg_fmnist_c100_a0.1"),
+                       f"{PLOTS_DIR}/iid_vs_noniid_fmnist.png",
+                       "IID", "Non-IID (α=0.1)")
+    print("[OK] Plot 3b: iid_vs_noniid_fmnist.png")
 
-# ── Plot 4: FedAvg vs Proposed — bar chart ──
+# ── Plot 4: Accuracy vs rounds — varying client count, CIFAR-10 a0.1 ──
 p4 = {
-    "FedAvg CIFAR-10": csv("fedavg_cifar10_c100_a0.1"),
-    "FedDgc CIFAR-10": csv("feddgc_cifar10_c100_a0.1"),
-    "FedAsync CIFAR-10": csv("fedasync_cifar10_c100_a0.1"),
-    "FedAvg FMNIST": csv("fedavg_fmnist_c100_a0.1"),
-    "FedDgc FMNIST": csv("feddgc_fmnist_c100_a0.1"),
+    "10 clients": csv("fedavg_cifar10_c10_a0.1"),
+    "50 clients": csv("fedavg_cifar10_c50_a0.1"),
+    "100 clients": csv("fedavg_cifar10_c100_a0.1"),
 }
 p4 = available(p4)
 if p4:
-    plot_fedavg_vs_proposed(p4, f"{PLOTS_DIR}/fedavg_vs_proposed.png")
-    print("[OK] Plot 4: fedavg_vs_proposed.png")
+    plot_accuracy_vs_rounds(p4, f"{PLOTS_DIR}/accuracy_vs_clients_cifar10_a0.1.png",
+                            "FedAvg Accuracy vs. Rounds — CIFAR-10, α=0.1, varying clients")
+    print("[OK] Plot 4: accuracy_vs_clients_cifar10_a0.1.png")
 
-# ── Plot 5: Category 7 metrics (round time + straggler ratio) ──
+# ── Plot 5: Cross-dataset comparison bar chart ──
 p5 = {
-    "FedDgc CIFAR-10": csv("feddgc_cifar10_c100_a0.1"),
-    "FedAsync CIFAR-10": csv("fedasync_cifar10_c100_a0.1"),
+    "CIFAR-10 α=0.1": csv("fedavg_cifar10_c100_a0.1"),
+    "CIFAR-10 IID": csv("fedavg_cifar10_c100_aiid"),
+    "FMNIST α=0.1": csv("fedavg_fmnist_c100_a0.1"),
+    "FMNIST IID": csv("fedavg_fmnist_c100_aiid"),
+    "MNIST α=0.1": csv("fedavg_mnist_c100_a0.1"),
+    "MNIST IID": csv("fedavg_mnist_c100_aiid"),
 }
 p5 = available(p5)
 if p5:
-    plot_cat7_metrics(p5, f"{PLOTS_DIR}/cat7_metrics.png")
-    print("[OK] Plot 5: cat7_metrics.png")
+    plot_accuracy_comparison(p5, f"{PLOTS_DIR}/accuracy_comparison.png")
+    print("[OK] Plot 5: accuracy_comparison.png")
 
-# ── Extra: Accuracy vs rounds for FMNIST ──
-pf = {
-    "FedAvg": csv("fedavg_fmnist_c100_a0.1"),
-    "FedDgc": csv("feddgc_fmnist_c100_a0.1"),
-    "FedAsync": csv("fedasync_fmnist_c100_a0.1"),
+# ── Plot 6: FMNIST accuracy vs rounds — varying alpha ──
+p6 = {
+    "α=0.1": csv("fedavg_fmnist_c100_a0.1"),
+    "α=0.5": csv("fedavg_fmnist_c100_a0.5"),
+    "IID": csv("fedavg_fmnist_c100_aiid"),
 }
-pf = available(pf)
-if pf:
-    plot_accuracy_vs_rounds(pf, f"{PLOTS_DIR}/accuracy_vs_rounds_fmnist_c100_a0.1.png",
-                            "Global Accuracy vs. Rounds — FMNIST, 100 clients, α=0.1")
-    print("[OK] Extra: accuracy_vs_rounds_fmnist_c100_a0.1.png")
+p6 = available(p6)
+if p6:
+    plot_accuracy_vs_rounds(p6, f"{PLOTS_DIR}/accuracy_vs_alpha_fmnist_c100.png",
+                            "FedAvg Accuracy vs. Rounds — FMNIST, 100 clients, varying α")
+    print("[OK] Plot 6: accuracy_vs_alpha_fmnist_c100.png")
 
 # ── Summary results table ──
 all_csvs = {}

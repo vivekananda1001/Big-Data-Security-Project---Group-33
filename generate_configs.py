@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate YAML config files for all experiments."""
+"""Generate YAML config files for all FedAvg heterogeneity experiments."""
 
 import os
 import yaml
@@ -24,34 +24,14 @@ BASE = {
     "momentum": 0.9,
 }
 
-STRAGGLER_CFG = {
-    "straggler_fraction": 0.3,
-    "slow_factor": 5.0,
-}
 
-FEDDGC_CFG = {
-    "cache_growth_rate_v": 50.0,
-    "cache_lambda": 0.5,
-    "staleness_decay_a": 0.5,
-    "mixing_alpha": 0.5,
-    "proximal_mu": 0.01,
-    "max_staleness": 10,
-    "deadline_percentile": 0.6,
-}
-
-FEDASYNC_CFG = {
-    "staleness_decay_a": 0.5,
-    "deadline_percentile": 0.6,
-}
-
-
-def make_config(method, dataset, num_clients, alpha):
+def make_config(dataset, num_clients, alpha):
     alpha_str = "iid" if alpha == "iid" else str(alpha)
-    name = f"{method}_{dataset}_c{num_clients}_a{alpha_str}"
+    name = f"fedavg_{dataset}_c{num_clients}_a{alpha_str}"
 
     cfg = {
         "experiment_name": name,
-        "method": method,
+        "method": "fedavg",
         "dataset": dataset,
         "num_clients": num_clients,
         "alpha": alpha,
@@ -59,40 +39,25 @@ def make_config(method, dataset, num_clients, alpha):
         **BASE,
     }
 
-    if method == "feddgc":
-        cfg["feddgc"] = dict(FEDDGC_CFG)
-        cfg["straggler"] = dict(STRAGGLER_CFG)
-    elif method == "fedasync":
-        cfg["fedasync"] = dict(FEDASYNC_CFG)
-        cfg["straggler"] = dict(STRAGGLER_CFG)
-
     return name, cfg
 
 
 def generate():
     configs = []
 
-    # Tier 1: CIFAR-10 + FMNIST, 3 client counts, 3 alpha values, FedAvg + FedDgc
+    # Tier 1: CIFAR-10 + FMNIST, 3 client counts, 3 alpha values
     for dataset in ["cifar10", "fmnist"]:
         for nc in [10, 50, 100]:
             for alpha in [0.1, 0.5, "iid"]:
-                for method in ["fedavg", "feddgc"]:
-                    configs.append(make_config(method, dataset, nc, alpha))
+                configs.append(make_config(dataset, nc, alpha))
 
-    # Tier 2: additional alpha values for 100 clients
+    # Tier 2: additional alpha values for 100 clients on CIFAR-10
     for alpha in [0.01, 1.0]:
-        for method in ["fedavg", "feddgc"]:
-            configs.append(make_config(method, "cifar10", 100, alpha))
-
-    # Tier 2: FedAsync-Basic for 100 clients
-    for dataset in ["cifar10", "fmnist"]:
-        for alpha in [0.1, 0.5]:
-            configs.append(make_config("fedasync", dataset, 100, alpha))
+        configs.append(make_config("cifar10", 100, alpha))
 
     # Tier 2: MNIST
     for alpha in [0.1, "iid"]:
-        for method in ["fedavg", "feddgc"]:
-            configs.append(make_config(method, "mnist", 100, alpha))
+        configs.append(make_config("mnist", 100, alpha))
 
     # Write all configs
     for name, cfg in configs:

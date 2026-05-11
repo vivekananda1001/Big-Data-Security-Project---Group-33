@@ -2,8 +2,6 @@
 """Main experiment runner. Loads a YAML config and runs a Flower simulation."""
 
 import argparse
-import os
-import sys
 
 import yaml
 import torch
@@ -14,7 +12,6 @@ from src.model import get_model, get_model_size_mb
 from src.data import load_global_testset
 from src.client import gen_client_fn
 from src.server import build_strategy, get_evaluate_fn
-from src.strategy.straggler_sim import StragglerSimulator
 
 
 def load_config(config_path: str) -> dict:
@@ -46,22 +43,9 @@ def run(config: dict):
         batch_size=128,
     )
 
-    straggler_sim = None
-    proximal_mu = 0.0
-    if config["method"] in ("feddgc", "fedasync"):
-        straggler_cfg = config.get("straggler", {})
-        straggler_sim = StragglerSimulator(
-            num_clients=config["num_clients"],
-            straggler_fraction=straggler_cfg.get("straggler_fraction", 0.3),
-            slow_factor=straggler_cfg.get("slow_factor", 5.0),
-            seed=config.get("seed", 42),
-        )
-        if config["method"] == "feddgc":
-            proximal_mu = config.get("feddgc", {}).get("proximal_mu", 0.01)
+    strategy = build_strategy(config)
 
-    strategy = build_strategy(config, straggler_sim)
-
-    evaluate_fn = get_evaluate_fn(model, testloader, device, logger, model_size_mb)
+    evaluate_fn = get_evaluate_fn(model, testloader, device, logger)
     strategy.evaluate_fn = evaluate_fn
 
     client_fn = gen_client_fn(
@@ -72,8 +56,6 @@ def run(config: dict):
         local_epochs=config.get("local_epochs", 5),
         lr=config.get("lr", 0.01),
         momentum=config.get("momentum", 0.9),
-        proximal_mu=proximal_mu,
-        straggler_sim=straggler_sim,
         device=device,
     )
 
