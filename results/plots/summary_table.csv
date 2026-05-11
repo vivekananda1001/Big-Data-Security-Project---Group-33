@@ -1,0 +1,23 @@
+Experiment,Test Accuracy (%),Final Loss,Convergence Round,Total Rounds
+fedavg_cifar10_c100_a0.01,38.13,1.8435,-1,100
+fedavg_cifar10_c100_a0.1,49.32,1.5381,-1,100
+fedavg_cifar10_c100_a0.5,59.11,1.2445,-1,100
+fedavg_cifar10_c100_a1.0,62.35,1.1332,-1,100
+fedavg_cifar10_c100_aiid,63.87,1.0816,-1,100
+fedavg_cifar10_c10_a0.1,57.13,1.2968,-1,100
+fedavg_cifar10_c10_a0.5,63.9,1.0884,-1,100
+fedavg_cifar10_c10_aiid,70.02,0.9434,-1,100
+fedavg_cifar10_c50_a0.1,53.13,1.4487,-1,100
+fedavg_cifar10_c50_a0.5,62.17,1.1524,-1,100
+fedavg_cifar10_c50_aiid,66.14,1.0186,-1,100
+fedavg_fmnist_c100_a0.1,77.95,0.658,-1,100
+fedavg_fmnist_c100_a0.5,83.28,0.4733,41,100
+fedavg_fmnist_c100_aiid,86.95,0.3941,33,100
+fedavg_fmnist_c10_a0.1,82.47,0.5059,53,100
+fedavg_fmnist_c10_a0.5,86.06,0.3895,42,100
+fedavg_fmnist_c10_aiid,89.06,0.3246,35,100
+fedavg_fmnist_c50_a0.1,79.3,0.5915,87,100
+fedavg_fmnist_c50_a0.5,84.79,0.4183,40,100
+fedavg_fmnist_c50_aiid,88.2,0.3211,34,100
+fedavg_mnist_c100_a0.1,96.32,0.1314,24,100
+fedavg_mnist_c100_aiid,99.49,0.0463,16,100
