@@ -3,6 +3,7 @@
 # Estimated: 12 experiments
 
 cd "$(dirname "$0")/.."
+source venv/bin/activate
 
 configs=(
     configs/feddgc_fmnist_c50_aiid.yaml

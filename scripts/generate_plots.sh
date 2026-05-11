@@ -3,4 +3,5 @@
 # Generates all mandatory plots + summary table
 
 cd "$(dirname "$0")/.."
+source venv/bin/activate
 python scripts/generate_all_plots.py

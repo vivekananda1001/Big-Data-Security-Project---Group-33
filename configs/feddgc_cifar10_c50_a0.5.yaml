@@ -3,7 +3,7 @@ method: feddgc
 dataset: cifar10
 num_clients: 50
 alpha: 0.5
-num_rounds: 300
+num_rounds: 100
 seed: 42
 fraction_fit: 0.5
 fraction_evaluate: 0.0

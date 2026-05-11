@@ -1,0 +1,17 @@
+[project]
+name = "fed-bds"
+version = "0.1.0"
+description = "Federated Learning Term Paper — System Heterogeneity (FedAvg, FedDgc, FedAsync)"
+requires-python = ">=3.9,<3.14"
+dependencies = [
+    "flwr[simulation]==1.15.2",
+    "flwr-datasets[vision]>=0.4.0",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "numpy>=1.24.0",
+    "matplotlib>=3.7.0",
+    "pandas>=2.0.0",
+    "pyyaml>=6.0",
+    "scikit-learn>=1.2.0",
+    "tqdm>=4.65.0",
+]

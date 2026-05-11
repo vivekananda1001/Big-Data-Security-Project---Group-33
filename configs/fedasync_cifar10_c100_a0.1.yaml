@@ -3,7 +3,7 @@ method: fedasync
 dataset: cifar10
 num_clients: 100
 alpha: 0.1
-num_rounds: 300
+num_rounds: 100
 seed: 42
 fraction_fit: 0.5
 fraction_evaluate: 0.0

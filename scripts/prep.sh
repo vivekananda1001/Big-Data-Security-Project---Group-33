@@ -4,8 +4,12 @@
 
 cd "$(dirname "$0")/.."
 
+echo "Creating venv with uv (Python 3.12)..."
+uv venv venv --python 3.12
+source venv/bin/activate
+
 echo "Installing dependencies..."
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 
 echo "Reducing rounds from 300 to 100 in all configs..."
 for f in configs/*.yaml; do
